@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>NEON CAT'S CRADLE</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#05060f" />
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAD/0lEQVR42u3dvU4bQRSA0cXCbqGhQ+IRKNJRpE7HO6ego8gjIKWjSZ0UpDCMf9axF3uzvnfmfAUyCorX9hGeYa/WF/PFVScd28xTIIAEkAASQBJAAkgACSAJIAEkgASQBJAAEkACSAJIAAkgASSAJIAEkAASQBJAAkgACSAJIAEkgASQBJAAEkACSABJAAkgASSAJIAEkAASQBJAAkgACSAJIAEkgASQBJAAEkACSABJAGnKLuMf4p+fv8rt+e119S/J7y8/yu3F873fQKPp6X9bt57+twAdr+ftpn5DKy5Pd1kM5VgDLfUUQ5W31LNmCKBTu3hdfa2/h5fVV4vocQ3teRfLtb7e/Ub8+LJhKMXrMl9c5XqiC5SDi6E4pIYfan/FE3wjFh3QZ7fxw5fY4/Ia8X5zbeMTAJry1R23Fv5q1QSg/8erBSIAqfltvAASQBJAAkgACSAJIAGksxZ3nKOcYWj5dEE5sRr2rOosuJ6ugTnog3q6wIOts+B6mjXUFxPTUOg1UCtD0PuLPRw9C66ndUPhB+zjLqIvXru3m9UodK45vbHetrqHl+7pLvKIdNB5oK1Fz/z2esgKIBGsgw9n8Xy/9TMxH13cgbIh2/j4qk48wvjb+AonEo/erQx/kSa4iyy1MtI6/R641oVao4BG0daICYA0XU6mCiABJIAEkASQABJAAkg6WKYLjbczXR//JHya30ANTtenmKXPAaiIaeEq49tiPsZYXWj81Focjs5zrXGLaNW+iN6ern/9Wv5pcfO9hrettUfUfeu6LsEs/erVyXWh8fWN2MbzvlZwVTsPe/2YU8zSpwE0ZBv/L0ln4TXKwSTaxlc7kfipF3KC6ni3bQjQ9LxqJQKQbOMFkACSABJAAkgASQDpxC4zHvSnPoY3eNkv3TdLradLPqO4deI9/gBrekDrQ67Z51w3uCQZYK1kDVToVDLnmmeAtRJAZTqx3MjdcvIww/xhJYvoPp0UU3z73p5y6ukyjnP0VzzLjdj+1cP0pIYcT/9n0m3EUs4DDdzGT3MV6bGuBJ10G9/QQNmUG5x2rudqIvF4W676C5Ca3MYLIAEkASSAdM4u63tI0aaF6v6wzlnFeroAkx4VTPw0BCjatNDG9erSTvw0twYKNy1UBn1yTvw0ByjctFAZ1Ug7s9HWIrpPZ/orTb/f42PNdN6f6srOhe2cFtq5DBod0857eXvcplPZRqzCk6n7t/HjYhryv9W9jW/6bPyIG7R2PoYBoNEwNYsGINnGCyABJIAkgASQABJAEkACSAAJIAkgASSABJAEkAASQAJIAkgACSABJIAkgASQABJAEkACSAAJIAkgASSABJAEkAASQAJIAEkA6Rz9BbDHeqEz4e36AAAAAElFTkSuQmCC" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Cradle" />
+<style>
+  :root {
+    --cyan:   #00eaff;
+    --magenta:#ff39e0;
+    --yellow: #fff14d;
+    --void:   #05060f;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    overflow: hidden; background: var(--void);
+    font-family: "SFMono-Regular", "Consolas", "Roboto Mono", monospace;
+    touch-action: none;
+  }
+  canvas { display: block; }
+
+  /* HUD */
+  #hud {
+    position: fixed; inset: 0; pointer-events: none; z-index: 10;
+  }
+  #status {
+    position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+    color: var(--cyan);
+    font-size: 13px; letter-spacing: 0.42em; text-transform: uppercase;
+    padding: 9px 18px 9px 24px;
+    border: 1px solid rgba(0,234,255,0.28);
+    border-radius: 2px;
+    background: rgba(5,6,18,0.45);
+    backdrop-filter: blur(4px);
+    text-shadow: 0 0 12px rgba(0,234,255,0.7);
+    white-space: nowrap;
+    transition: color .25s, border-color .25s, text-shadow .25s;
+  }
+  #status.warn   { color: var(--yellow); border-color: rgba(255,241,77,0.4); text-shadow: 0 0 12px rgba(255,241,77,0.7); }
+  #status.linked { color: var(--magenta); border-color: rgba(255,57,224,0.4); text-shadow: 0 0 12px rgba(255,57,224,0.7); }
+
+  #title {
+    position: absolute; bottom: 18px; left: 22px;
+    color: rgba(255,255,255,0.28);
+    font-size: 10px; letter-spacing: 0.5em; text-transform: uppercase;
+  }
+  #fps {
+    position: absolute; bottom: 18px; right: 22px;
+    color: rgba(0,234,255,0.45);
+    font-size: 10px; letter-spacing: 0.2em;
+  }
+  /* corner ticks – signature framing element */
+  .corner { position: absolute; width: 26px; height: 26px; border: 1px solid rgba(0,234,255,0.35); }
+  .corner.tl { top: 14px; left: 14px; border-right: none; border-bottom: none; }
+  .corner.tr { top: 14px; right: 14px; border-left: none; border-bottom: none; }
+  .corner.bl { bottom: 14px; left: 14px; border-right: none; border-top: none; }
+  .corner.br { bottom: 14px; right: 14px; border-left: none; border-top: none; }
+
+  /* tap-to-start gate (fallback for browsers that need a user gesture) */
+  #gate {
+    position: fixed; inset: 0; z-index: 20; display: none;
+    align-items: center; justify-content: center; flex-direction: column;
+    background: radial-gradient(circle at 50% 45%, rgba(0,234,255,0.06), rgba(5,6,15,0.96));
+    color: #fff; cursor: pointer; text-align: center; padding: 24px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #gate.show { display: flex; }
+  #gate .ring {
+    width: 90px; height: 90px; border-radius: 50%;
+    border: 1px solid rgba(0,234,255,0.5); margin-bottom: 26px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 30px rgba(0,234,255,0.35), inset 0 0 22px rgba(0,234,255,0.18);
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  #gate .ring span { font-size: 30px; }
+  #gate h1 {
+    font-size: 14px; font-weight: 500; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--cyan); text-shadow: 0 0 14px rgba(0,234,255,0.6); margin: 0 0 10px;
+  }
+  #gate p { font-size: 11px; letter-spacing: 0.18em; color: rgba(255,255,255,0.45); margin: 0; }
+  @keyframes pulse { 0%,100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.07); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { #gate .ring { animation: none; } }
+</style>
+</head>
+<body>
+  <div id="hud">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div id="status">Iniciando sensor óptico</div>
+    <div id="title">Cat's&nbsp;Cradle&nbsp;//&nbsp;Hand&nbsp;Mesh</div>
+    <div id="fps">-- fps</div>
+  </div>
+
+  <div id="gate">
+    <div class="ring"><span>✋</span></div>
+    <h1>Toque para iniciar</h1>
+    <p>Permita o acesso à câmera</p>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
+
+<script>
+/* ============================================================
+   NEON CAT'S CRADLE
+   MediaPipe Hands -> p5.js canvas with glowing neon strings.
+   ============================================================ */
+
+// ---- config -------------------------------------------------
+const COL = { cyan: '#00eaff', magenta: '#ff39e0', yellow: '#fff14d' };
+const HAND_HUE = ['#00eaff', '#ff39e0'];          // slot0 / slot1 base colour
+const TIPS = [4, 8, 12, 16, 20];                  // fingertip landmark indices
+const HAND_CONNECTIONS = [
+  [0,1],[1,2],[2,3],[3,4],            // thumb
+  [0,5],[5,6],[6,7],[7,8],            // index
+  [5,9],[9,10],[10,11],[11,12],       // middle
+  [9,13],[13,14],[14,15],[15,16],     // ring
+  [13,17],[17,18],[18,19],[19,20],    // pinky
+  [0,17]                              // palm base
+];
+
+// ---- state --------------------------------------------------
+const videoEl = document.createElement('video');
+videoEl.setAttribute('playsinline', '');
+videoEl.muted = true;
+
+let latestHands = null;        // raw normalized landmarks from MediaPipe
+let videoReady = false;
+let cameraError = false;
+let smoothed = [null, null];   // smoothed screen-space points per slot
+let miss = [0, 0];             // frames since a slot was last seen
+const statusEl = document.getElementById('status');
+const fpsEl = document.getElementById('fps');
+const gateEl = document.getElementById('gate');
+let fpsSmoothed = 60;
+
+// lighter settings on phones/tablets so it stays smooth
+const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)); // iPad on iPadOS
+let cameraObj = null;
+
+// ---- p5 -----------------------------------------------------
+function setup() {
+  const c = createCanvas(windowWidth, windowHeight);
+  c.position(0, 0);
+  pixelDensity(1);                 // keep fill-rate sane with heavy shadowBlur
+  drawingContext.imageSmoothingEnabled = true;
+  initMediaPipe();
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+
+function draw() {
+  background(5, 6, 15);
+
+  if (videoReady) drawVideo();
+
+  const cover = getCoverParams();
+  const slots = buildSlots();      // up to 2 hands, sorted left->right on screen
+
+  // map + temporally smooth
+  for (let s = 0; s < 2; s++) {
+    if (slots[s]) {
+      const mapped = slots[s].map(l => ({ x: mapX(l.x, cover), y: mapY(l.y, cover) }));
+      if (!smoothed[s] || smoothed[s].length !== mapped.length) {
+        smoothed[s] = mapped.map(p => ({ ...p }));
+      } else {
+        for (let i = 0; i < mapped.length; i++) {
+          smoothed[s][i].x = lerp(smoothed[s][i].x, mapped[i].x, 0.45);
+          smoothed[s][i].y = lerp(smoothed[s][i].y, mapped[i].y, 0.45);
+        }
+      }
+      miss[s] = 0;
+    } else {
+      miss[s]++;
+      if (miss[s] > 8) smoothed[s] = null;   // brief persistence kills flicker
+    }
+  }
+
+  // render order: faint skeleton -> bright strings -> glowing joints
+  for (let s = 0; s < 2; s++) if (smoothed[s]) drawSkeleton(smoothed[s], HAND_HUE[s]);
+  if (smoothed[0] && smoothed[1]) drawStrings(smoothed[0], smoothed[1]);
+  for (let s = 0; s < 2; s++) if (smoothed[s]) drawDots(smoothed[s], HAND_HUE[s]);
+
+  resetShadow();
+  updateHud(slots.length);
+}
+
+// ---- drawing helpers ---------------------------------------
+function drawVideo() {
+  const p = getCoverParams();
+  const ctx = drawingContext;
+  ctx.save();
+  ctx.translate(width, 0);   // mirror so it feels like a reflection
+  ctx.scale(-1, 1);
+  try { ctx.drawImage(videoEl, p.dx, p.dy, p.dw, p.dh); } catch (e) {}
+  ctx.restore();
+}
+
+function drawSkeleton(pts, hue) {
+  const ctx = drawingContext;
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = hue;
+  ctx.lineCap = 'round';
+  for (const [a, b] of HAND_CONNECTIONS) {
+    ctx.beginPath();
+    ctx.strokeStyle = rgba(hue, 0.32);
+    ctx.lineWidth = 2;
+    ctx.moveTo(pts[a].x, pts[a].y);
+    ctx.lineTo(pts[b].x, pts[b].y);
+    ctx.stroke();
+  }
+}
+
+function drawStrings(L, R) {
+  const ctx = drawingContext;
+  const maxD = width * 0.55;
+  ctx.lineCap = 'round';
+
+  for (let k = 0; k < TIPS.length; k++) {
+    const a = L[TIPS[k]];
+    const b = R[TIPS[k]];
+    const d = dist(a.x, a.y, b.x, b.y);
+    const tension = constrain(d / maxD, 0, 1);      // 0 = slack, 1 = taut
+
+    // taut strings get thin, bright and energetic; slack ones thick and calm
+    const thickness = lerp(7, 1.4, tension);
+    const energy = lerp(0.55, 1.0, tension);
+    const sag = lerp(46, 5, tension);
+    const wobble = Math.sin(frameCount * 0.07 + k * 1.3) * lerp(16, 2, tension);
+
+    // tri-colour gradient along the string
+    const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+    g.addColorStop(0.0, rgba(COL.cyan, energy));
+    g.addColorStop(0.5, rgba(COL.magenta, energy));
+    g.addColorStop(1.0, rgba(COL.yellow, energy));
+
+    ctx.shadowBlur = lerp(10, 24, tension);
+    ctx.shadowColor = COL.magenta;
+    ctx.strokeStyle = g;
+    ctx.lineWidth = thickness;
+
+    const mx = (a.x + b.x) / 2 + wobble;
+    const my = (a.y + b.y) / 2 + sag;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.quadraticCurveTo(mx, my, b.x, b.y);
+    ctx.stroke();
+  }
+}
+
+function drawDots(pts, hue) {
+  const ctx = drawingContext;
+  ctx.lineWidth = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const tip = TIPS.includes(i);
+    const col = tip ? COL.yellow : hue;
+    const r = tip ? 7 : 4;
+    ctx.shadowBlur = tip ? 26 : 14;
+    ctx.shadowColor = col;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(pts[i].x, pts[i].y, r, 0, Math.PI * 2);
+    ctx.fill();
+    if (tip) {                       // hot white core for the sparkle
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.beginPath();
+      ctx.arc(pts[i].x, pts[i].y, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function resetShadow() { drawingContext.shadowBlur = 0; }
+
+// ---- geometry / mapping ------------------------------------
+function getCoverParams() {
+  const vw = videoEl.videoWidth || 640;
+  const vh = videoEl.videoHeight || 480;
+  const scale = Math.max(width / vw, height / vh);
+  const dw = vw * scale, dh = vh * scale;
+  return { dw, dh, dx: (width - dw) / 2, dy: (height - dh) / 2 };
+}
+// mirrored mapping: matches the flipped video exactly
+function mapX(nx, p) { return p.dx + (1 - nx) * p.dw; }
+function mapY(ny, p) { return p.dy + ny * p.dh; }
+
+function buildSlots() {
+  if (!latestHands || !latestHands.length) return [];
+  return latestHands
+    .map(lms => {
+      let mx = 0; for (const l of lms) mx += l.x; mx /= lms.length;
+      return { lms, key: 1 - mx };   // screen-space x (left -> right)
+    })
+    .sort((a, b) => a.key - b.key)
+    .slice(0, 2)
+    .map(o => o.lms);
+}
+
+// ---- colour util -------------------------------------------
+function rgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+// ---- MediaPipe ---------------------------------------------
+function initMediaPipe() {
+  if (typeof Hands === 'undefined' || typeof Camera === 'undefined') {
+    setStatus('Falha ao carregar a biblioteca — verifique a conexão', 'warn');
+    return;
+  }
+  const hands = new Hands({
+    locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${f}`
+  });
+  hands.setOptions({
+    maxNumHands: 2,
+    modelComplexity: IS_MOBILE ? 0 : 1,   // lighter model on phones
+    minDetectionConfidence: 0.6,
+    minTrackingConfidence: 0.6,
+    selfieMode: false                      // we mirror manually on the canvas
+  });
+  hands.onResults((res) => {
+    latestHands = (res.multiHandLandmarks && res.multiHandLandmarks.length)
+      ? res.multiHandLandmarks : null;
+  });
+
+  // smaller capture on mobile = much less CPU
+  const res = IS_MOBILE ? { width: 640, height: 480 } : { width: 1280, height: 720 };
+  cameraObj = new Camera(videoEl, {
+    onFrame: async () => { await hands.send({ image: videoEl }); },
+    facingMode: 'user',
+    width: res.width,
+    height: res.height
+  });
+
+  startCamera();
+
+  // if the camera hasn't come up shortly, offer a tap-to-start (iOS gesture rule)
+  setTimeout(() => { if (!videoReady && !cameraError) showGate(); }, 2200);
+}
+
+function startCamera() {
+  if (!cameraObj) return;
+  cameraObj.start()
+    .then(() => { videoReady = true; cameraError = false; hideGate(); setStatus('Levante as duas mãos'); })
+    .catch((err) => {
+      console.error(err);
+      // permission states differ across browsers; let the user retry with a tap
+      if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+        cameraError = true;
+        setStatus('Acesso à câmera negado — permita e recarregue', 'warn');
+      } else {
+        showGate();
+      }
+    });
+}
+
+function showGate() { gateEl.classList.add('show'); }
+function hideGate() { gateEl.classList.remove('show'); }
+
+gateEl.addEventListener('click', () => {
+  setStatus('Iniciando câmera…');
+  hideGate();
+  startCamera();
+});
+
+// ---- HUD ----------------------------------------------------
+function setStatus(text, cls) {
+  statusEl.textContent = text;
+  statusEl.className = cls || '';
+}
+
+function updateHud(nHands) {
+  // fps
+  const dt = deltaTime || 16;
+  fpsSmoothed = lerp(fpsSmoothed, 1000 / dt, 0.1);
+  fpsEl.textContent = Math.round(fpsSmoothed) + ' fps';
+
+  if (cameraError) return;
+  if (!videoReady) return;
+  if (nHands === 0)      setStatus('Levante as duas mãos');
+  else if (nHands === 1) setStatus('Mostre a outra mão para ligar as cordas');
+  else                   setStatus('Conexão ativa — mexa para esticar', 'linked');
+}
+
+// ---- PWA: register the service worker ----------------------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW:', e));
+  });
+}
+</script>
+</body>
+</html>
